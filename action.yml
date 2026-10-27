@@ -1,0 +1,36 @@
+name: "legal-cite-check"
+description: "Check whether cited cases exist in CourtListener and whether the case names match. Not legal advice."
+inputs:
+  files:
+    description: "Globs of files to check"
+    required: true
+  fail-on:
+    description: "Comma-separated labels that fail the job"
+    required: false
+    default: "not_found,invalid_reporter,mismatch"
+  json:
+    description: "Optional path for the JSON report"
+    required: false
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - run: pip install "$GITHUB_ACTION_PATH"
+      shell: bash
+    - run: |
+        set -f
+        if [ -n "${COURTLISTENER_TOKEN:-}" ]; then
+          echo "::add-mask::$COURTLISTENER_TOKEN"
+        fi
+        ARGS=(check $INPUT_FILES --fail-on "$INPUT_FAIL_ON")
+        if [ -n "$INPUT_JSON" ]; then ARGS+=(--json "$INPUT_JSON"); fi
+        python -m legalcite "${ARGS[@]}" --md report.md
+        cat report.md >> "$GITHUB_STEP_SUMMARY"
+      shell: bash
+      env:
+        INPUT_FILES: ${{ inputs.files }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_JSON: ${{ inputs.json }}
