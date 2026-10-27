@@ -82,6 +82,41 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// Whole words that introduce a citation and are not part of the party name
+// (signals, transitions, sentence openers). Stripped only while a party
+// name remains, so "See also Brown" and "In United States" lose the
+// introducer, while "United States", "Board of Regents", "Butler", and
+// "See v. See" stay intact.
+const SIGNAL_PREFIX_RE = /^(?:see|cf\.?|compare|accord|contra|e\.g\.,?|also|again|but|generally|and|or|however|moreover|furthermore|therefore|thus|hence|further|additionally|likewise|similarly|notably|indeed|finally|meanwhile|consequently|accordingly|although|because|while|when|where|after|before|under|following|unlike|since|if|as|in|for|with|from)\s+/i;
+
+function stripLeadingSignals(name) {
+  let cur = name;
+  for (;;) {
+    const m = cur.match(SIGNAL_PREFIX_RE);
+    if (!m) return cur.trim();
+    const rest = cur.slice(m[0].length);
+    // "In the Interest", "For the People": the word is the party's first word.
+    if (!rest || /^(?:of|the|and|for)\b/i.test(rest)) return cur.trim();
+    cur = rest;
+  }
+}
+
+// Year only from this citation's own parenthetical, directly after the
+// cite or its pin cite ("123 F.3d 456 (1999)", "644, 650 (9th Cir. 2015)",
+// "456, 460 n.2 (1999)"). A "(YYYY)" later in the text is not borrowed.
+function yearBelongingToCitation(text, citeEnd) {
+  const rest = text.slice(citeEnd);
+  const lead = /^(?:\s*,\s*\*?\d{1,5}(?:\s*[-\u2013\u2014]\s*\*?\d{1,5})?)?(?:\s+n+\.?\s*\d{1,4}(?:\s*[-\u2013\u2014]\s*\d{1,4})?)?\s*/.exec(rest);
+  const after = rest.slice(lead[0].length);
+  if (after.charAt(0) !== "(") return null;
+  const close = after.indexOf(")");
+  if (close < 0) return null;
+  const inner = after.slice(1, close);
+  if (inner.indexOf("(") !== -1) return null;
+  const year = inner.match(/(?:^|\D)(\d{4})\s*$/);
+  return year ? year[1] : null;
+}
+
 function extractCitations(text) {
   // Longest reporter abbreviations first.
   const reporters = REPORTERS.map((r) => r.abbreviation)
@@ -97,10 +132,7 @@ function extractCitations(text) {
     const party = "[A-Z][\\w.'&\\-]+(?:\\s+(?:[A-Z][\\w.'&\\-]+|(?:of|the|and|for)\\s+[A-Z][\\w.'&\\-]+)){0,4}(?:,\\s+(?:Inc\\.|LLC|Corp\\.))?";
     const nameMatch = [...before.matchAll(
       new RegExp("(" + party + ")\\s+v\\.\\s+(" + party + ")", "g"))].pop();
-    // Citation signals ("See ...", "Cf. ...") are not part of the case name.
-    const stripSignal = (s) => s.replace(/^(?:see also|see|cf\.?|compare|e\.g\.,?)\s+/i, "");
-    const yearMatch = text.slice(m.index + m[0].length, m.index + m[0].length + 60)
-      .match(/\(\s*(?:[^)]*?)(\d{4})\s*\)/);
+    const year = yearBelongingToCitation(text, m.index + m[0].length);
     const reporter = m[2].replace(/\s+/g, " ").trim();
     const info = REPORTERS.find((r) => r.abbreviation === reporter);
     const slug = info ? info.slug : null;
@@ -124,8 +156,8 @@ function extractCitations(text) {
     out.push({
       text: m[0], volume: m[1], reporter: reporter, page: m[3],
       pinCite: pinCite,
-      caseName: nameMatch ? stripSignal(nameMatch[1]) + " v. " + nameMatch[2] : null,
-      year: yearMatch ? yearMatch[1] : null,
+      caseName: nameMatch ? stripLeadingSignals(nameMatch[1]) + " v. " + nameMatch[2] : null,
+      year: year,
       manualUrl: manualUrl,
       scholarUrl: "https://scholar.google.com/scholar?q=" + encodeURIComponent('"' + m[0] + '"'),
     });
