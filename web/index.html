@@ -41,8 +41,8 @@
     <section class="hero" aria-labelledby="page-title">
       <div class="hero-copy">
         <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span><span data-copy="heroKicker">A focused workspace for cited cases</span></p>
-        <h1 id="page-title" data-i18n="heading">Extract citations from legal text</h1>
-        <p class="hero-lede" data-i18n="subtitle">Does the case you cited exist in CourtListener, and is it the case you named? Paste text below. This page only extracts citations in your browser — it does not look anything up.</p>
+        <h1 id="page-title" data-i18n="heading">Does every case in your brief actually exist?</h1>
+        <p class="hero-lede" data-i18n="subtitle">Paste your motion or brief. The tool pulls out every citation and shows you a link to check it yourself — nothing leaves your browser.</p>
       </div>
       <div class="hero-facts" aria-label="How the browser tool works">
         <div class="fact-row"><span class="fact-icon fact-icon-teal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5 9.2 17 19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-copy="factLocal">Citation extraction runs in this browser</span></div>
@@ -91,6 +91,7 @@
         </div>
         <button class="text-button" type="button" onclick="clearInput()" data-copy="clearInput">Clear text</button>
       </div>
+      <p class="browser-mode-prenote" data-i18n="extractPreNote">Browser mode only extracts citation formats — it does not check cases online. Click a result link to confirm manually, or use the CLI below for a full check.</p>
       <p id="file-status" class="file-status" aria-live="polite"></p>
       <div id="check-feedback" class="feedback-line" role="status" aria-live="polite" hidden></div>
 
@@ -107,6 +108,7 @@
           <span class="empty-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M9 5h9l6 6v16H9a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.5"/><path d="M18 5v6h6M11 16h10M11 20h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
           <div><strong data-copy="resultsPlaceholder">Your extracted citations will appear here.</strong><p data-copy="resultsPlaceholderHint">Start by pasting text above or loading the sample.</p></div>
         </div>
+        <p class="label-legend" data-i18n="labelLegend">VERIFIED = the case exists and the case name matches. MISMATCH = the case name at that citation differs from the one you wrote. NOT_FOUND = no case at that citation in CourtListener's database.</p>
         <div class="table-wrap" id="resultsWrap" hidden>
           <table class="data-table results-table">
             <thead><tr><th scope="col" data-i18n="thIndex">#</th><th scope="col" data-i18n="thCitation">Citation</th><th scope="col" data-i18n="thCaseName">Case name in text</th><th scope="col" data-i18n="thLabel">Label</th><th scope="col" data-i18n="thLinks">Manual-check links</th></tr></thead>
@@ -114,6 +116,7 @@
           </table>
         </div>
         <div class="not-checked-note"><span class="note-dot" aria-hidden="true"></span><p data-copy="browserModeNote">Every result in browser mode is marked NOT_CHECKED. Use the links to verify manually, or see the CLI guide for the full CourtListener check.</p></div>
+        <p class="results-guide"><a href="#cli" data-i18n="resultsCliGuide">All NOT_CHECKED? Use the CLI for a full check →</a></p>
       </div>
     </section>
 
@@ -135,11 +138,14 @@
       </details>
     </section>
 
-    <section class="utility-section" id="translation" aria-labelledby="translation-title">
-      <div class="section-heading section-heading-compact">
-        <div class="section-number" aria-hidden="true">03</div>
-        <div><p class="section-kicker" data-copy="utilityTool">Optional tool</p><h2 id="translation-title" data-i18n="transHeading">Opinion translation viewer</h2><p class="section-description" data-copy="translationIntro">Compare pasted opinion paragraphs with a machine translation from an endpoint you choose.</p></div>
-      </div>
+    <section class="utility-card" id="translation" aria-labelledby="translation-title">
+      <details class="tool-disclosure">
+        <summary class="tool-summary">
+          <span class="section-number section-number-small" aria-hidden="true">03</span>
+          <span class="summary-copy"><span class="section-kicker" data-copy="utilityTool">Optional tool</span><span class="summary-title" id="translation-title" data-i18n="transHeading">Opinion translation viewer</span><span class="summary-subtitle" data-copy="translationIntro">Compare pasted opinion paragraphs with a machine translation from an endpoint you choose.</span></span>
+          <span class="summary-chevron" aria-hidden="true">⌄</span>
+        </summary>
+        <div class="disclosure-body">
       <div class="warning-card"><span class="warning-icon" aria-hidden="true">!</span><div><strong data-i18n="transWarning">Machine-translation warning: this is a machine translation, not legal advice. The original text prevails. Always read the original before relying on any translated passage. Case names, citations, reporter abbreviations, and numbers are kept verbatim and are not translated.</strong></div></div>
       <div class="translation-notes"><p data-i18n="transPreservedNote">Protected text (case names, citations, reporter abbreviations, numbers) is shown verbatim in both columns.</p><p data-i18n="transPrivacyNote">If you enter an endpoint, the pasted opinion text is sent to that endpoint for translation. It is not sent anywhere when no endpoint is configured.</p><p data-i18n="transSourceNote">v2 assumes the pasted opinion is in English.</p></div>
       <div class="field-block"><label for="opinion" class="field-label" data-copy="opinionLabel">Opinion text</label><textarea id="opinion" data-i18n-placeholder="transPastePlaceholder" placeholder="Paste opinion text here (blank lines separate paragraphs)..." rows="7"></textarea></div>
@@ -150,6 +156,8 @@
       </div>
       <p id="transStatus" class="inline-status" role="status" aria-live="polite"></p>
       <div class="table-wrap translation-results-wrap"><table class="data-table translation-table"><thead><tr><th scope="col" data-i18n="transOriginal">Original</th><th scope="col" data-i18n="transTranslation">Translation</th></tr></thead><tbody id="transResults"></tbody></table></div>
+        </div>
+      </details>
     </section>
 
     <section class="utility-card briefing-card" id="briefing">
@@ -161,6 +169,7 @@
         </summary>
         <div class="disclosure-body briefing-body">
           <div class="briefing-warning"><span class="warning-icon" aria-hidden="true">!</span><strong data-i18n="briefingNotLegal">Not legal advice. Read every original before relying on it.</strong></div>
+          <p class="briefing-audience" data-i18n="briefingAudience">For Chinese-speaking users in the US, or Chinese-friendly legal-aid settings. This tool covers US CourtListener cases only — it does not cover Chinese law.</p>
           <div class="briefing-form-grid">
             <label class="field-block"><span class="field-label" data-i18n="briefingStateLabel">State (first version: CA, TX, FL, NY)</span><select id="briefState"><option value="CA">California (CA)</option><option value="TX">Texas (TX)</option><option value="FL">Florida (FL)</option><option value="NY">New York (NY)</option></select></label>
             <label class="field-block"><span class="field-label" data-i18n="briefingTopicsLabel">Topics / issues (comma-separated)</span><input type="text" id="briefTopics" placeholder="e.g. employment, housing"></label>
@@ -193,6 +202,11 @@
         </summary>
         <div class="disclosure-body cli-body">
           <p class="cli-explainer" data-copy="cliExplanation">The browser page only extracts citation strings. The CLI can send those extracted strings to CourtListener when you provide your own token; by default it does not send the brief text.</p>
+          <p data-i18n="cliSingle">Only checking one brief? The manual links above are enough — no CLI needed.</p>
+          <p data-i18n="cliBatch">Batch checks or workflow use? Follow the CLI steps below. First-time setup takes longer than a single check, so allow extra time on your first setup.</p>
+          <p><a class="source-link" href="https://wiki.free.law/c/courtlistener/help/api/rest/v3/overview" target="_blank" rel="noopener noreferrer" data-i18n="cliTokenLink">CourtListener API documentation — sign in to see your token ↗</a></p>
+          <p class="cli-terms" data-i18n="cliTerms">Who may use the CourtListener API: membership-based access is for personal, educational, research, journalistic, and exploratory use. Solo practitioners and firms with five or fewer attorneys are welcome, as are small government bodies and small pre-revenue unfunded organizations. It may not power a revenue-positive commercial product, and it may not be used to build tools for an organization — even internal tools count as commercial use. Larger firms and commercial uses need a separate Free Law Project agreement.</p>
+          <p><a class="source-link" href="https://free.law/membership/allowed-api-usage/" target="_blank" rel="noopener noreferrer" data-i18n="cliTermsLink">Free Law Project API usage details ↗</a></p>
           <div class="code-panel"><div class="code-panel-header"><span data-copy="cliCommandLabel">Run in a terminal</span><button class="copy-code-button" type="button" onclick="copyCli()" data-copy="copyCommand">Copy command</button></div><pre><code id="cli-command">pip install .
 python -m legalcite check brief.md --md report.md
 # with: COURTLISTENER_TOKEN set in your environment</code></pre></div>
