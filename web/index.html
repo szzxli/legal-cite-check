@@ -75,6 +75,51 @@ input[type=text] { width: 100%; box-sizing: border-box; }
 <thead><tr><th data-i18n="transOriginal">Original</th><th data-i18n="transTranslation">Translation</th></tr></thead>
 <tbody id="transResults"></tbody>
 </table>
+<h2 data-i18n="briefingHeading">Daily Legal Briefing — 每日法律简报</h2>
+<p data-i18n="briefingIntro">Your morning briefing, open-and-see: no account, no email push. Preferences stay in this browser only.</p>
+<div class="warning">
+<strong data-i18n="briefingNotLegal">Not legal advice. Read every original before relying on it.</strong>
+</div>
+<p>
+<label><span data-i18n="briefingStateLabel">State (first version: CA, TX, FL, NY)</span><br>
+<select id="briefState">
+<option value="CA">California (CA)</option>
+<option value="TX">Texas (TX)</option>
+<option value="FL">Florida (FL)</option>
+<option value="NY">New York (NY)</option>
+</select></label>
+</p>
+<p>
+<label><span data-i18n="briefingTopicsLabel">Topics / issues (comma-separated)</span><br>
+<input type="text" id="briefTopics" placeholder="e.g. employment, housing"></label>
+</p>
+<p>
+<label><span data-i18n="briefingCasesLabel">Cases you follow (one citation or case name per line)</span><br>
+<textarea id="briefCases" rows="4" style="height:90px" placeholder="347 U.S. 483"></textarea></label>
+</p>
+<p>
+<label><span data-i18n="briefingRulesLabel">State rules you track (one per line: YYYY-MM-DD | rule | https://source)</span><br>
+<textarea id="briefRules" rows="3" style="height:70px"></textarea></label>
+</p>
+<p>
+<label><span data-i18n="briefingDeadlinesLabel">Deadlines you track (one per line: YYYY-MM-DD | deadline | https://source)</span><br>
+<textarea id="briefDeadlines" rows="3" style="height:70px"></textarea></label>
+</p>
+<p>
+<button onclick="saveBriefingPrefs()" data-i18n="briefingSaveShow">Save preferences &amp; show briefing</button>
+<button onclick="getBriefing()" data-i18n="briefingGet">Get today's briefing</button>
+<button onclick="showSampleBriefing()" data-i18n="briefingSampleBtn">Show sample briefing</button>
+<button onclick="clearBriefingPrefs()" data-i18n="briefingClear">Clear all my briefing data</button>
+</p>
+<p id="briefingSaved"></p>
+<h3 data-i18n="briefingOverview">30-second overview</h3>
+<p id="briefingOverview"></p>
+<p id="briefingStatus"></p>
+<div id="briefingResults"></div>
+<h3 data-i18n="briefingManualLabel">Manual items</h3>
+<p data-i18n="briefingManualHint">Manual mode: paste CourtListener links or opinion text below.</p>
+<p><textarea id="briefManual" rows="4" style="height:90px" placeholder="Title | Court | YYYY-MM-DD | https://link | snippet"></textarea></p>
+<p><button onclick="rankManualBriefing()" data-i18n="briefingManualGet">Rank manual items</button></p>
 <h2 data-i18n="howTo">How to run the full check</h2>
 <p data-i18n="howToText">The full check needs the Python CLI and your own free CourtListener token (see the README). It sends only the extracted citation strings by default, never your brief text.</p>
 <pre>pip install .
@@ -85,6 +130,7 @@ python -m legalcite check brief.md --md report.md
 <script src="extract.js"></script>
 <script src="i18n.js"></script>
 <script src="translate.js"></script>
+<script src="briefing.js"></script>
 <script src="app.js"></script>
 <!-- GoatCounter: privacy-friendly, cookie-free page-view counter (no personal data). -->
 <script data-goatcounter="https://szzxli.goatcounter.com/count"

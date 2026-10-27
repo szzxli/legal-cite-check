@@ -25,6 +25,7 @@ function setLang(lang) {
   if (sel) sel.value = lang;
   if (window.__lastResults) render(window.__lastResults);
   if (window.__transRows) renderTrans(window.__transRows);
+  if (window.__lastBriefing) renderBriefing(window.__lastBriefing);
 }
 
 function render(results) {
@@ -154,3 +155,122 @@ async function doTranslate() {
     { endpoint: endpoint, target: target });
   renderTrans(rows);
 }
+
+/* ---- Daily Legal Briefing (local-only, first version) ---- */
+function briefingPrefsFromForm() {
+  return {
+    state: (document.getElementById("briefState").value || "CA"),
+    topics: (document.getElementById("briefTopics").value || "")
+      .split(",").map(function (s) { return s.trim(); }).filter(Boolean),
+    cases: (document.getElementById("briefCases").value || "")
+      .split("\n").map(function (s) { return s.trim(); }).filter(Boolean),
+    rules: briefingParseDatedLines(document.getElementById("briefRules").value || ""),
+    deadlines: briefingParseDatedLines(document.getElementById("briefDeadlines").value || "")
+  };
+}
+function briefingPrefsToForm(prefs) {
+  document.getElementById("briefState").value = prefs.state;
+  document.getElementById("briefTopics").value = (prefs.topics || []).join(", ");
+  document.getElementById("briefCases").value = (prefs.cases || []).join("\n");
+  document.getElementById("briefRules").value = (prefs.rules || [])
+    .map(function (r) { return r.date + " | " + r.label + " | " + r.source; }).join("\n");
+  document.getElementById("briefDeadlines").value = (prefs.deadlines || [])
+    .map(function (d) { return d.date + " | " + d.label + " | " + d.source; }).join("\n");
+}
+function renderBriefing(briefing) {
+  window.__lastBriefing = briefing;
+  var o = briefing.overview;
+  document.getElementById("briefingOverview").textContent =
+    o.followed + " " + T().briefingFollowedCount + " · "
+    + o.deadlines + " " + T().briefingDeadlinesCount + " · "
+    + o.rules + " " + T().briefingRulesCount;
+  var st = document.getElementById("briefingStatus");
+  if (briefing.isSample) {
+    st.textContent = T().briefingSampleNote;
+  } else if (!briefing.items.length) {
+    st.textContent = T().briefingNoReal;
+  } else { st.textContent = ""; }
+  var wrap = document.getElementById("briefingResults");
+  wrap.innerHTML = "";
+  var buckets = { followed: [], rules: [], fines: [] };
+  briefing.items.forEach(function (it) { (buckets[it.bucket] || buckets.fines).push(it); });
+  ["followed", "rules", "fines"].forEach(function (b) {
+    var h = document.createElement("h4");
+    h.textContent = b === "followed" ? T().briefingFollowedCount
+      : b === "rules" ? T().briefingRulesCount : T().briefingFinesHeading;
+    wrap.appendChild(h);
+    if (!buckets[b].length) {
+      var em = document.createElement("p"); em.textContent = T().briefingEmptyBucket;
+      wrap.appendChild(em); return;
+    }
+    buckets[b].forEach(function (it) {
+      var div = document.createElement("div");
+      var countdown = "";
+      if (it.kind === "deadline") {
+        var days = briefingCountdownDays(it.date, briefingTodayStr());
+        countdown = " — " + briefingCountdownLabel(days, currentLang);
+      }
+      div.innerHTML = "<p><a href=\"" + esc(it.url) + "\" target=\"_blank\" rel=\"noopener\">"
+        + esc(it.title) + "</a>"
+        + (it.sample ? " <strong>[SAMPLE / 示例]</strong>" : "")
+        + (it.court ? " — " + esc(it.court) : "")
+        + (it.date ? " (" + esc(it.date) + countdown + ")" : "") + "<br>"
+        + (it.snippet ? "<em>" + esc(it.snippet) + "</em><br>" : "")
+        + T().briefingWhyLabel + ": " + esc(it.why) + "</p>";
+      wrap.appendChild(div);
+    });
+  });
+}
+function showSampleBriefing() {
+  renderBriefing({ isSample: true, items: BRIEFING_SAMPLE_ITEMS.slice(),
+    overview: { followed: 0, deadlines: 0, rules: 0, sample: true } });
+}
+function saveBriefingPrefs() {
+  var prefs = briefingPrefsFromForm();
+  briefingSavePrefs(localStorage, prefs);
+  document.getElementById("briefingSaved").textContent = T().briefingSavedNote;
+  getBriefing();
+}
+function clearBriefingPrefs() {
+  briefingClearPrefs(localStorage);
+  briefingPrefsToForm(briefingDefaultPrefs());
+  document.getElementById("briefingResults").innerHTML = "";
+  document.getElementById("briefingOverview").textContent = "";
+  document.getElementById("briefingStatus").textContent = "";
+  document.getElementById("briefingSaved").textContent = "";
+}
+async function getBriefing() {
+  var prefs = briefingPrefsFromForm();
+  try {
+    var raws = await briefingFetchOpinions(prefs, fetch);
+    var briefing = briefingBuild(raws, prefs, briefingTodayStr());
+    if (briefing.isSample) {
+      document.getElementById("briefingStatus").textContent = T().briefingNoReal;
+    }
+    renderBriefing(briefing);
+  } catch (e) {
+    document.getElementById("briefingStatus").textContent = T().briefingFetchBlocked;
+    document.getElementById("briefingOverview").textContent = "";
+    document.getElementById("briefingResults").innerHTML = "";
+  }
+}
+function rankManualBriefing() {
+  var prefs = briefingPrefsFromForm();
+  var raws = (document.getElementById("briefManual").value || "").split("\n")
+    .map(function (line) {
+      var parts = line.split("|").map(function (s) { return s.trim(); });
+      if (parts.length < 4 || !/^https?:\/\//.test(parts[3])) return null;
+      return { kind: "opinion", title: parts[0], court: parts[1], date: parts[2],
+        url: parts[3], snippet: parts[4] || "" };
+    }).filter(Boolean);
+  var briefing = briefingBuild(raws, prefs, briefingTodayStr());
+  renderBriefing(briefing);
+}
+/* Restore saved preferences on load (no fetch until the user clicks). */
+(function () {
+  try {
+    if (typeof localStorage !== "undefined" && localStorage.getItem(BRIEFING_STORAGE_KEY)) {
+      briefingPrefsToForm(briefingLoadPrefs(localStorage));
+    }
+  } catch (e) { /* private mode etc.: preferences simply do not persist */ }
+})();
