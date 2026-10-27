@@ -86,6 +86,9 @@ def main(argv=None):
     check.add_argument("--json", default=None)
     check.add_argument("--html", default=None)
     check.add_argument("--fail-on", default="not_found,invalid_reporter,mismatch")
+    check.add_argument("--lang", default="en", choices=["en", "es", "zh"],
+                       help="report heading language only (en/es/zh); "
+                            "the English disclaimer stays authoritative")
     check.add_argument("--send-full-text", action="store_true",
                        help="send full brief text to CourtListener (OFF by default; "
                             "default sends only extracted citation strings)")
@@ -109,15 +112,15 @@ def main(argv=None):
         return 2
     if args.md:
         with open(args.md, "w", encoding="utf-8") as f:
-            f.write(to_markdown(report))
+            f.write(to_markdown(report, lang=args.lang))
     if args.json:
         with open(args.json, "w", encoding="utf-8") as f:
             f.write(to_json(report))
     if args.html:
         with open(args.html, "w", encoding="utf-8") as f:
-            f.write(to_html(report))
+            f.write(to_html(report, lang=args.lang))
     if not (args.md or args.json or args.html):
-        print(to_markdown(report))
+        print(to_markdown(report, lang=args.lang))
     return 1 if failed else 0
 
 

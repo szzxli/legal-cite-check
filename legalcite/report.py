@@ -72,25 +72,40 @@ def to_json(report):
     return json.dumps(report, indent=2, ensure_ascii=False)
 
 
-def to_markdown(report):
-    lines = [f"> **{DISCLAIMER}**", "",
-             "## Summary",
-             f"Total citations: {report['summary']['total']}"]
+REPORT_HEADINGS = {
+    "en": {"summary": "Summary", "citations": "Citations",
+           "total": "Total citations", "manual": "Manual check"},
+    "es": {"summary": "Resumen", "citations": "Citas",
+           "total": "Citas totales", "manual": "Verificaci\u00f3n manual"},
+    "zh": {"summary": "\u6458\u8981", "citations": "\u5f15\u7528",
+           "total": "\u5f15\u7528\u603b\u6570", "manual": "\u624b\u52a8\u68c0\u67e5"},
+}
+
+
+def to_markdown(report, lang="en"):
+    h = REPORT_HEADINGS.get(lang, REPORT_HEADINGS["en"])
+    lines = [f"> **{DISCLAIMER}**"]
+    if lang != "en":
+        lines.append("> Report headings are translated; the English disclaimer "
+                     "above is authoritative.")
+    lines += ["", f"## {h['summary']}",
+              f"{h['total']}: {report['summary']['total']}"]
     for label in LABELS:
         lines.append(f"- {label}: {report['summary'][label]}")
     lines.append("")
-    lines.append("## Citations")
+    lines.append(f"## {h['citations']}")
     for row in report["citations"]:
         lines.append(
             f"- [ ] **{row['label']}** — {row['text']}"
             + (f" ({row['case_name_in_text']})" if row["case_name_in_text"] else "")
             + f" — {meaning(row['label'])} {NEXT_ACTION[row['label']]}"
-            + (f" [Manual check]({row['manual_check_url']})" if row["manual_check_url"] else "")
+            + (f" [{h['manual']}]({row['manual_check_url']})" if row["manual_check_url"] else "")
         )
     return "\n".join(lines) + "\n"
 
 
-def to_html(report):
+def to_html(report, lang="en"):
+    h = REPORT_HEADINGS.get(lang, REPORT_HEADINGS["en"])
     rows = "".join(
         f"<tr><td>{r['index']}</td><td>{html.escape(r['text'])}</td>"
         f"<td>{html.escape(r['case_name_in_text'] or '')}</td>"
@@ -105,7 +120,7 @@ def to_html(report):
         # DISCLAIMER is our own constant (no user input), so it is inserted
         # verbatim: the exact disclaimer text must appear in every report.
         f"<p><strong>{DISCLAIMER}</strong></p>"
-        f"<p>Total citations: {report['summary']['total']}</p>"
+        f"<p>{h['total']}: {report['summary']['total']}</p>"
         "<table><tr><th>#</th><th>Citation</th><th>Case name in text</th>"
         "<th>Label</th><th>What to do next</th><th>Link</th></tr>"
         f"{rows}</table></body></html>"
