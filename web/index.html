@@ -117,6 +117,24 @@
         </div>
         <div class="not-checked-note"><span class="note-dot" aria-hidden="true"></span><p data-copy="browserModeNote">Every result in browser mode is marked NOT_CHECKED. Use the links to verify manually, or see the CLI guide for the full CourtListener check.</p></div>
         <p class="results-guide"><a href="#cli" data-i18n="resultsCliGuide">All NOT_CHECKED? Use the CLI for a full check →</a></p>
+        <div class="report-section" id="reportSection" hidden>
+          <h3 data-i18n="reportHeading">Citation health report</h3>
+          <p id="reportSummary" class="report-summary" role="status" aria-live="polite"></p>
+          <p class="report-note" data-i18n="reportNotCheckedNote">Browser mode: every citation below is NOT_CHECKED. This report summarizes what was extracted; it does not verify any case. Check each case by hand using the links.</p>
+          <p class="report-note" data-i18n="reportScopeNote">This report does not check whether cases support your argument, whether quotes are accurate, or whether a case is still good law.</p>
+          <p class="report-note" data-i18n="reportFlagNote">In browser mode, only recognized reporters are extracted, so an unknown reporter usually means the citation was not extracted at all. These flags describe the extracted text only; they are not a judgment about quality.</p>
+          <div class="export-actions">
+            <button class="button button-small button-secondary" type="button" onclick="downloadReportMd()" data-i18n="reportDownloadMd">Download report (Markdown)</button>
+            <button class="button button-small button-secondary" type="button" onclick="downloadReportHtml()" data-i18n="reportDownloadHtml">Download report (printable HTML)</button>
+          </div>
+          <p class="report-note" data-i18n="reportShareNote">Shareable means the downloaded file: send that file onward. There is no hosted link for your brief, and nothing is stored on a server.</p>
+          <div class="table-wrap">
+            <table class="data-table results-table">
+              <thead><tr><th scope="col" data-i18n="thIndex">#</th><th scope="col" data-i18n="thCitation">Citation</th><th scope="col" data-i18n="thCaseName">Case name in text</th><th scope="col" data-i18n="reportThYear">Year</th><th scope="col" data-i18n="reportThPin">Pin cite</th><th scope="col" data-i18n="reportThFlags">Structure flags</th><th scope="col" data-i18n="thLinks">Manual-check links</th></tr></thead>
+              <tbody id="reportRows"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -223,6 +241,7 @@ python -m legalcite check brief.md --md report.md
 
   <script src="labels.js"></script>
   <script src="extract.js"></script>
+  <script src="report.js"></script>
   <script src="i18n.js"></script>
   <script src="translate.js"></script>
   <script src="briefing.js"></script>

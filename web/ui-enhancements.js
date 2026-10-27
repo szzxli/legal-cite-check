@@ -258,6 +258,8 @@
     if (tbody) tbody.innerHTML = "";
     window.__lastResults = [];
     window.__hasRunExtraction = false;
+    var reportSection = document.getElementById("reportSection");
+    if (reportSection) reportSection.hidden = true;
     syncResults([]);
     setFeedback(text("cleared"), "neutral");
     updateCharCount();

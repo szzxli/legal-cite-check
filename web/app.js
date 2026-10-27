@@ -44,6 +44,83 @@ function render(results) {
   document.getElementById("count").textContent =
     T().countFound.replace("{n}", results.length);
   window.__lastResults = results;
+  renderReport(results);
+}
+
+/* Citation health report (v1): summary + structure checks only, from
+   the extracted rows. No verification, no relevance judgment, no brief
+   text stored: downloads are generated in this browser on demand. */
+function reportStrings() {
+  var t = T();
+  return {
+    disclaimer: I18N.en.disclaimer, summary: t.reportSummary,
+    total: t.reportTotal, byLabel: t.reportByLabel,
+    citations: t.reportHeading, manual: t.reportHeading && "Manual check",
+    scope: t.reportScopeNote, flags: t.reportThFlags,
+    flagDuplicate: t.reportFlagDuplicate, flagMissingYear: t.reportFlagMissingYear,
+    flagNoCaseName: t.reportFlagNoCaseName, flagInvalidReporter: t.reportFlagInvalidReporter,
+    noFlags: t.reportNoFlags, citation: t.thCitation, caseName: t.thCaseName,
+    year: t.reportThYear, pin: t.reportThPin, label: t.thLabel, links: t.thLinks
+  };
+}
+
+function renderReport(results) {
+  var section = document.getElementById("reportSection");
+  if (!section) return;
+  if (!results || !results.length) { section.hidden = true; return; }
+  var report = buildHealthReport(results);
+  window.__lastReport = report;
+  var t = T();
+  var byLabel = Object.keys(report.byLabel).map(function (label) {
+    return label + ": " + report.byLabel[label];
+  }).join(" · ");
+  var flagParts = REPORT_FLAG_KEYS.filter(function (f) { return report.flagCounts[f]; })
+    .map(function (f) {
+      var label = { duplicate: t.reportFlagDuplicate, missingYear: t.reportFlagMissingYear,
+        noCaseName: t.reportFlagNoCaseName, invalidReporter: t.reportFlagInvalidReporter }[f];
+      return label + ": " + report.flagCounts[f];
+    });
+  document.getElementById("reportSummary").textContent =
+    t.reportTotal + ": " + report.total + " · " + t.reportByLabel + ": " + byLabel
+    + (flagParts.length ? " · " + t.reportStructureHeading + ": " + flagParts.join("; ") : "");
+  var tbody = document.getElementById("reportRows");
+  tbody.innerHTML = "";
+  report.rows.forEach(function (row) {
+    var flagText = row.flags.length ? row.flags.map(function (fl) {
+      return { duplicate: t.reportFlagDuplicate, missingYear: t.reportFlagMissingYear,
+        noCaseName: t.reportFlagNoCaseName, invalidReporter: t.reportFlagInvalidReporter }[fl];
+    }).join("; ") : t.reportNoFlags;
+    var tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + row.index + "</td><td>" + esc(row.text) + "</td>"
+      + "<td>" + esc(row.caseName) + "</td><td>" + esc(row.year) + "</td>"
+      + "<td>" + esc(row.pinCite) + "</td><td>" + esc(flagText) + "</td>"
+      + "<td><a href=\"" + esc(row.manualUrl) + "\" target=\"_blank\" rel=\"noopener\">"
+      + esc(t.openCourtListener) + "</a>"
+      + " | <a href=\"" + esc(row.scholarUrl) + "\" target=\"_blank\" rel=\"noopener\">"
+      + esc(t.searchScholar) + "</a></td>";
+    tbody.appendChild(tr);
+  });
+  section.hidden = false;
+}
+
+function downloadBlob(content, filename, type) {
+  var blob = new Blob([content], { type: type });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+function downloadReportMd() {
+  if (!window.__lastReport) return;
+  downloadBlob(healthReportMarkdown(window.__lastReport, reportStrings()),
+    "citation-health-report.md", "text/markdown");
+}
+
+function downloadReportHtml() {
+  if (!window.__lastReport) return;
+  downloadBlob(healthReportHtml(window.__lastReport, reportStrings()),
+    "citation-health-report.html", "text/html");
 }
 
 function showQueryPanel(original, english, status) {

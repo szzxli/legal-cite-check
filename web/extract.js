@@ -107,8 +107,23 @@ function extractCitations(text) {
     const manualUrl = slug
       ? "https://www.courtlistener.com/c/" + slug + "/" + m[1] + "/" + m[3] + "/"
       : "https://www.courtlistener.com/c/" + encodeURIComponent(reporter) + "/" + m[1] + "/" + m[3] + "/";
+    // Pin cite: a page (or page range) immediately after the first page,
+    // e.g. "576 U.S. 644, 650". Not a pin cite when the digits are the
+    // volume of a following citation ("644, 577 U.S. 100").
+    let pinCite = null;
+    const tail = text.slice(m.index + m[0].length, m.index + m[0].length + 24);
+    const pinMatch = tail.match(/^\s*,\s*(\d{1,5})(?:\s*[-\u2013]\s*(\d{1,5}))?\b/);
+    if (pinMatch) {
+      const afterPin = tail.slice(pinMatch[0].length);
+      const followedByReporter = reporters.some((rep) =>
+        new RegExp("^\\s+" + rep + "\\s+\\d").test(afterPin));
+      if (!followedByReporter) {
+        pinCite = pinMatch[2] ? pinMatch[1] + "\u2013" + pinMatch[2] : pinMatch[1];
+      }
+    }
     out.push({
       text: m[0], volume: m[1], reporter: reporter, page: m[3],
+      pinCite: pinCite,
       caseName: nameMatch ? stripSignal(nameMatch[1]) + " v. " + nameMatch[2] : null,
       year: yearMatch ? yearMatch[1] : null,
       manualUrl: manualUrl,
