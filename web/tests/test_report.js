@@ -71,6 +71,47 @@ for (const body of [mdBody, htmlBody]) {
     "no relevance/score/good-law judgment or percentage in citations body");
 }
 assert.ok(md.includes("pin cite") || md.includes("Pin cite") || true, "md built");
+// The short disclaimer fallback and any supplied disclaimer are bold,
+// and the bold is closed so Markdown renders it.
+const mdDefault = healthReportMarkdown(rows);
+assert.ok(mdDefault.split("\n").includes("> **Not legal advice.**"),
+  "default disclaimer bold is closed:\n" + mdDefault.split("\n").slice(0, 4).join("\n"));
+assert.ok(md.includes("> **" + t.disclaimer + "**"),
+  "supplied disclaimer bold is closed");
+for (const line of mdDefault.split("\n").concat(md.split("\n"))) {
+  const markers = line.match(/\*\*/g) || [];
+  assert.strictEqual(markers.length % 2, 0, "unclosed bold: " + line);
+}
+
+// (h) Year misattribution must surface as a missing-year flag, and a
+// signal word must not be stored as part of the case name. Guards: a
+// normal cite with a year and a pin cite is not flagged, and multi-word
+// party names stay whole.
+const leaked = buildHealthReport(extractCitations(
+  "Smith v. Jones, 123 F.3d 456. Also Brown v. Board of Education, 347 U.S. 483 (1954)."));
+assert.strictEqual(leaked.total, 2);
+assert.strictEqual(leaked.byLabel.NOT_CHECKED, 2, "browser rows stay NOT_CHECKED");
+assert.strictEqual(leaked.rows[0].year, null);
+assert.strictEqual(leaked.rows[0].caseName, "Smith v. Jones");
+assert.ok(leaked.rows[0].flags.includes("missingYear"), "missing year flagged when the cite has none");
+assert.strictEqual(leaked.flagCounts.missingYear, 1);
+assert.strictEqual(leaked.rows[1].caseName, "Brown v. Board of Education");
+assert.strictEqual(leaked.rows[1].year, "1954");
+assert.ok(!leaked.rows[1].flags.includes("missingYear"));
+const guarded = buildHealthReport(extractCitations(
+  "United States v. Nixon, 418 U.S. 683, 700 (1974). Board of Regents v. Roth, 408 U.S. 564 (1972)."));
+assert.strictEqual(guarded.rows[0].caseName, "United States v. Nixon");
+assert.strictEqual(guarded.rows[0].year, "1974");
+assert.strictEqual(guarded.rows[0].pinCite, "700");
+assert.deepStrictEqual(guarded.rows[0].flags, []);
+assert.strictEqual(guarded.rows[1].caseName, "Board of Regents v. Roth");
+assert.strictEqual(guarded.rows[1].year, "1972");
+assert.ok(!guarded.rows[1].flags.includes("missingYear"));
+const leakedMd = healthReportMarkdown(leaked, t);
+assert.ok(leakedMd.includes("123 F.3d 456 (Smith v. Jones)"), "missing-year cite keeps its own name");
+assert.ok(!leakedMd.includes("123 F.3d 456 (Smith v. Jones) (1954)"), "borrowed year is not printed");
+assert.ok(leakedMd.includes("Missing year"));
+assert.ok(leakedMd.includes("347 U.S. 483 (Brown v. Board of Education) (1954)"));
 
 // (g) i18n key sets stay equal across languages (new report keys included).
 const enKeys = Object.keys(I18N.en).sort();

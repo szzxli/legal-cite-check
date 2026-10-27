@@ -82,6 +82,62 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// Leading citation signals and sentence-start words are not part of the
+// case name. Longer phrases are listed before the words they contain
+// (alternation is left-first). A prefix is removed only when a party name
+// remains, so "See v. Seattle" stays intact and multi-word parties such as
+// "United States" and "Board of Regents" are not trimmed.
+const CASE_PREFIXES = [
+  "see also", "see generally", "but see", "but cf.", "but cf", "see",
+  "cf.", "cf", "compare", "accord", "contra", "e.g.,", "e.g.",
+  "also", "again", "but", "and", "under", "following", "moreover",
+  "furthermore", "further", "additionally", "similarly", "likewise",
+  "however", "therefore", "thus", "hence", "accordingly", "consequently",
+  "meanwhile", "subsequently", "generally", "citing", "quoting", "discussing",
+  "unlike", "like", "after", "before", "while", "although", "because",
+  "since", "if", "when", "where", "here", "there", "then", "now", "yet",
+  "nor", "or", "for", "with", "from", "per", "via", "both", "either",
+  "neither", "recently", "notably", "finally", "later", "earlier",
+  "despite", "notwithstanding", "into", "over", "about", "as", "by", "on",
+  "at", "to", "in", "an"
+];
+const CASE_PREFIX_RE = new RegExp(
+  "^(?:" + CASE_PREFIXES.map(escapeRegExp).join("|") + ")\\s+", "i");
+
+function stripCasePrefix(name) {
+  let prev;
+  do {
+    prev = name;
+    const next = name.replace(CASE_PREFIX_RE, "");
+    if (!next) break;
+    name = next;
+  } while (name !== prev);
+  return name;
+}
+
+// A comma-page after the citation is a pin cite unless those digits are the
+// volume of the next citation ("644, 577 U.S. 100").
+function pinFromTail(tail, reporterRes) {
+  const pinMatch = tail.match(/^\s*,\s*(\d{1,5})(?:\s*[-\u2013]\s*(\d{1,5}))?\b/);
+  if (!pinMatch) return { pinCite: null, rest: tail };
+  const afterPin = tail.slice(pinMatch[0].length);
+  const followedByReporter = reporterRes.some((rep) =>
+    new RegExp("^\\s+" + rep + "\\s+\\d").test(afterPin));
+  if (followedByReporter) return { pinCite: null, rest: tail };
+  return {
+    pinCite: pinMatch[2] ? pinMatch[1] + "\u2013" + pinMatch[2] : pinMatch[1],
+    rest: afterPin,
+  };
+}
+
+// Year only if this citation's own parenthetical opens immediately after the
+// citation or its pin cite, for example "(2015)" or "(9th Cir. 2015)".
+// Do not scan ahead: a later "(YYYY)" belongs to the next citation.
+function yearInOwnParenthetical(tail) {
+  const yearMatch = tail.match(/^\s*\(\s*(?:[^)]*?)(\d{4})\s*\)/);
+  return yearMatch ? yearMatch[1] : null;
+}
+
 function extractCitations(text) {
   // Longest reporter abbreviations first.
   const reporters = REPORTERS.map((r) => r.abbreviation)
@@ -97,35 +153,20 @@ function extractCitations(text) {
     const party = "[A-Z][\\w.'&\\-]+(?:\\s+(?:[A-Z][\\w.'&\\-]+|(?:of|the|and|for)\\s+[A-Z][\\w.'&\\-]+)){0,4}(?:,\\s+(?:Inc\\.|LLC|Corp\\.))?";
     const nameMatch = [...before.matchAll(
       new RegExp("(" + party + ")\\s+v\\.\\s+(" + party + ")", "g"))].pop();
-    // Citation signals ("See ...", "Cf. ...") are not part of the case name.
-    const stripSignal = (s) => s.replace(/^(?:see also|see|cf\.?|compare|e\.g\.,?)\s+/i, "");
-    const yearMatch = text.slice(m.index + m[0].length, m.index + m[0].length + 60)
-      .match(/\(\s*(?:[^)]*?)(\d{4})\s*\)/);
     const reporter = m[2].replace(/\s+/g, " ").trim();
     const info = REPORTERS.find((r) => r.abbreviation === reporter);
     const slug = info ? info.slug : null;
     const manualUrl = slug
       ? "https://www.courtlistener.com/c/" + slug + "/" + m[1] + "/" + m[3] + "/"
       : "https://www.courtlistener.com/c/" + encodeURIComponent(reporter) + "/" + m[1] + "/" + m[3] + "/";
-    // Pin cite: a page (or page range) immediately after the first page,
-    // e.g. "576 U.S. 644, 650". Not a pin cite when the digits are the
-    // volume of a following citation ("644, 577 U.S. 100").
-    let pinCite = null;
-    const tail = text.slice(m.index + m[0].length, m.index + m[0].length + 24);
-    const pinMatch = tail.match(/^\s*,\s*(\d{1,5})(?:\s*[-\u2013]\s*(\d{1,5}))?\b/);
-    if (pinMatch) {
-      const afterPin = tail.slice(pinMatch[0].length);
-      const followedByReporter = reporters.some((rep) =>
-        new RegExp("^\\s+" + rep + "\\s+\\d").test(afterPin));
-      if (!followedByReporter) {
-        pinCite = pinMatch[2] ? pinMatch[1] + "\u2013" + pinMatch[2] : pinMatch[1];
-      }
-    }
+    const tail = text.slice(m.index + m[0].length);
+    const pin = pinFromTail(tail, reporters);
+    const plaintiff = nameMatch ? stripCasePrefix(nameMatch[1]) : "";
     out.push({
       text: m[0], volume: m[1], reporter: reporter, page: m[3],
-      pinCite: pinCite,
-      caseName: nameMatch ? stripSignal(nameMatch[1]) + " v. " + nameMatch[2] : null,
-      year: yearMatch ? yearMatch[1] : null,
+      pinCite: pin.pinCite,
+      caseName: plaintiff ? plaintiff + " v. " + nameMatch[2] : null,
+      year: yearInOwnParenthetical(pin.rest),
       manualUrl: manualUrl,
       scholarUrl: "https://scholar.google.com/scholar?q=" + encodeURIComponent('"' + m[0] + '"'),
     });

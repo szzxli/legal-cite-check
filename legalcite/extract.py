@@ -27,10 +27,11 @@ _KNOWN_REPORTERS = (
     r"F\. ?(?:2d|3d|4th)",
 )
 
+_REPORTER_ALT = "|".join(_KNOWN_REPORTERS) + r"|[A-Z][A-Za-z]{0,10}\.[A-Za-z.]*"
 _CITATION_RE = re.compile(
     r"\b(?P<volume>\d{1,4})\s+"
-    r"(?P<reporter>" + "|".join(_KNOWN_REPORTERS) + r"|[A-Z][A-Za-z]{0,10}\.[A-Za-z.]*"
-    r")\s+(?P<page>\d{1,5})\b"
+    r"(?P<reporter>" + _REPORTER_ALT + r")"
+    r"\s+(?P<page>\d{1,5})\b"
 )
 
 _PARTY = (
@@ -44,7 +45,12 @@ _CASE_NAME_RE = re.compile(_PARTY + r"\s+v\.\s+" + _PARTY)
 # therefore re-derives the two parties from the match text.
 _CASE_NAME_SPLIT = re.compile(r"\s+v\.\s+")
 
-_YEAR_RE = re.compile(r"\(\s*(?:[^)]*?)(\d{4})\s*\)")
+# A year counts only when this citation's own parenthetical opens right
+# after the citation or its pin cite. A later "(YYYY)" belongs to the
+# next citation and must not be borrowed (the old 60-character scan did).
+_PIN_PREFIX_RE = re.compile(r"^\s*,\s*\d{1,5}(?:\s*[-\u2013]\s*\d{1,5})?\b")
+_FOLLOWING_CITE_RE = re.compile(r"^\s+(?:" + _REPORTER_ALT + r")\s+\d")
+_OWN_YEAR_RE = re.compile(r"^\s*\(\s*(?:[^)]*?)(\d{4})\s*\)")
 _OTHER_RE = re.compile(r"\bId\.\b|\bsupra\b|\b\d+\s+U\.S\.C\.\b")
 
 
@@ -62,18 +68,38 @@ class Citation:
     notes: list = field(default_factory=list)
 
 
-_SIGNAL_RE = re.compile(r"^(?:see also|see|cf\.?|compare|e\.g\.,?)\s+", re.IGNORECASE)
+# Keep in sync with CASE_PREFIXES in web/extract.js. Longer phrases come
+# before the words they contain. A prefix is removed only when a party
+# name remains, so "See v. Seattle" and "United States v. ..." stay intact.
+_CASE_PREFIXES = (
+    "see also", "see generally", "but see", "but cf.", "but cf", "see",
+    "cf.", "cf", "compare", "accord", "contra", "e.g.,", "e.g.",
+    "also", "again", "but", "and", "under", "following", "moreover",
+    "furthermore", "further", "additionally", "similarly", "likewise",
+    "however", "therefore", "thus", "hence", "accordingly", "consequently",
+    "meanwhile", "subsequently", "generally", "citing", "quoting", "discussing",
+    "unlike", "like", "after", "before", "while", "although", "because",
+    "since", "if", "when", "where", "here", "there", "then", "now", "yet",
+    "nor", "or", "for", "with", "from", "per", "via", "both", "either",
+    "neither", "recently", "notably", "finally", "later", "earlier",
+    "despite", "notwithstanding", "into", "over", "about", "as", "by", "on",
+    "at", "to", "in", "an",
+)
+_SIGNAL_RE = re.compile(
+    r"^(?:" + "|".join(re.escape(p) for p in _CASE_PREFIXES) + r")\s+",
+    re.IGNORECASE,
+)
 
 
 def _strip_signal(name):
-    # Citation signals ("See ...", "Cf. ...") precede the case name and
-    # are not part of it; without this, "See Brown v. Board" would be
-    # recorded as "See Brown v. Board of Education".
-    prev = None
-    while prev != name:
-        prev = name
-        name = _SIGNAL_RE.sub("", name)
-    return name
+    # Citation signals ("See ...", "Cf. ...", "Also ...") precede the case
+    # name and are not part of it. Stop rather than erase a party whose
+    # whole name is a signal word ("See v. Seattle").
+    while True:
+        nxt = _SIGNAL_RE.sub("", name, count=1)
+        if not nxt or nxt == name:
+            return name
+        name = nxt
 
 
 def _case_name_before(text, start):
@@ -92,7 +118,13 @@ def _case_name_before(text, start):
 
 
 def _year_after(text, end):
-    m = _YEAR_RE.search(text[end:end + 60])
+    rest = text[end:]
+    pin = _PIN_PREFIX_RE.match(rest)
+    # ", 576 U.S. 644" is the next citation, not a pin cite, so its year
+    # parenthetical is not this citation's.
+    if pin and not _FOLLOWING_CITE_RE.match(rest[pin.end():]):
+        rest = rest[pin.end():]
+    m = _OWN_YEAR_RE.match(rest)
     return m.group(1) if m else None
 
 
