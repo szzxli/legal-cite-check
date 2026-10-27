@@ -113,3 +113,68 @@ decisions only; seed findings are pending live verification.
 ## License
 
 MIT. See `LICENSE`.
+## v2 (local-only prototype): trilingual web UI + opinion translation viewer
+
+**Status: v2 is deployed on GitHub Pages (see Live web tool link above).**
+
+New in v2:
+
+- Web UI language switcher (English / Espa\u00f1ol / \u4e2d\u6587) in `web/`:
+  all UI strings, result-label explanations, help text, and the
+  disclaimer are translated (`web/i18n.js`). Every language carries
+  exactly the same set of UI keys (enforced by
+  `web/tests/test_i18n_translate.js`). The English disclaimer is
+  authoritative; Spanish and Chinese disclaimers are marked as
+  translations. Label codes (`VERIFIED`, `NOT_CHECKED`, ...) never change.
+- Opinion translation viewer on the same page: paste opinion text, split
+  by paragraph, with an original-vs-translation side-by-side view and a
+  prominent machine-translation warning in all 3 languages. The
+  **original text prevails** and the translation is **not legal advice**.
+- CLI `--lang en|es|zh`: translates report headings only; the English
+  disclaimer in every report stays authoritative.
+
+What is NEVER translated (verbatim preservation, `web/translate.js`):
+
+- case names, full citations, reporter abbreviations, and numbers.
+  They are masked out (placeholders) before any text leaves the browser
+  and restored verbatim afterwards, reusing the citation patterns in
+  `web/extract.js`. A node test proves protected spans survive a
+  translation round trip unchanged.
+
+Machine-translation limits (read before relying on any translation):
+
+- Translation is **OFF by default**: there is no default endpoint, no
+  shipped key, and no paid service. The page translates nothing locally.
+  To enable it, the user enters their own LibreTranslate-compatible
+  `/translate` URL; that pasted opinion text is then sent to that
+  endpoint (and only there). With no endpoint configured, the page says
+  so clearly instead of inventing translated text.
+- v2 assumes the pasted opinion is in English. Legal machine
+  translation can mistranslate holdings, negations, and conditions;
+  Spanish output is generally stronger than Chinese for legal English,
+  but neither is reliable for a filing decision. Always read the
+  original. This viewer does not fetch opinions from CourtListener
+  itself \u2014 the user pastes the text.
+- No server, no cost, no token: v2 adds no backend and no
+  CourtListener token use. Web citation checking still makes no API
+  calls; the only network call v2 can ever make is the user's own
+  translation endpoint, only when they configure one.
+
+### Query auto-translation (v2 behaviour)
+
+On a Chinese or Spanish UI, clicking search automatically translates the
+query to English and then searches the English query -- the user never
+has to translate by hand. The search panel and the results area both keep
+two lines: the original query and the auto-translated English query.
+The English query is editable: if the user spots a mistranslation, they
+edit the English query and click "Search with this English query" to
+re-search without re-translating. On an English UI no translation is
+applied. Citation-format content (volume, reporter abbreviation, page)
+and numbers are masked before translation and restored verbatim, so
+`347 U.S. 483 (1954)` can never come back as a translated or renumbered
+cite. Query translation shares the opinion viewer's user-supplied
+LibreTranslate-compatible endpoint setting (source = UI language,
+target = English). If no endpoint is configured, or translation fails,
+the page says so plainly, generates no English query, claims no English
+search, and runs citation extraction on the original query only -- a
+fake or guessed translation is never used as a search query.
