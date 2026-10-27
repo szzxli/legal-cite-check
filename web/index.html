@@ -7,39 +7,84 @@
 <style>
 body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2em auto; padding: 0 1em; }
 .disclaimer { border: 2px solid #900; padding: 1em; background: #fff5f5; }
+.warning { border: 2px solid #b45309; padding: 1em; background: #fffbeb; }
 textarea { width: 100%; height: 200px; }
 table { border-collapse: collapse; width: 100%; }
-td, th { border: 1px solid #ccc; padding: 0.4em; text-align: left; }
+td, th { border: 1px solid #ccc; padding: 0.4em; text-align: left; vertical-align: top; }
+input[type=text] { width: 100%; box-sizing: border-box; }
 </style>
 </head>
 <body>
-<h1>legal-cite-check</h1>
-<p>Does the case you cited exist in CourtListener, and is it the case you named? Paste text below. This page only extracts citations in your browser — it does not look anything up.</p>
+<p>
+<label>Language / Idioma / 语言：
+<select id="lang" onchange="setLang(this.value)">
+<option value="en">English</option>
+<option value="es">Español</option>
+<option value="zh">中文</option>
+</select></label>
+</p>
+<h1 data-i18n="heading">legal-cite-check</h1>
+<p data-i18n="subtitle">Does the case you cited exist in CourtListener, and is it the case you named? Paste text below. This page only extracts citations in your browser — it does not look anything up.</p>
 <div class="disclaimer" id="disclaimer">
-<strong>Not legal advice. This tool only checks whether a cited case exists in CourtListener and whether the case name matches. It does not check whether the case supports your argument, whether quotes or pin cites are accurate, or whether the case is still good law. A case marked NOT FOUND may still exist (CourtListener's coverage is incomplete); a case marked VERIFIED may still be wrong for your purpose. Read every case you cite.</strong>
+<strong data-i18n="disclaimer">Not legal advice. This tool only checks whether a cited case exists in CourtListener and whether the case name matches. It does not check whether the case supports your argument, whether quotes or pin cites are accurate, or whether the case is still good law. A case marked NOT FOUND may still exist (CourtListener's coverage is incomplete); a case marked VERIFIED may still be wrong for your purpose. Read every case you cite.</strong>
+<p><em data-i18n="disclaimerNote">The English disclaimer above is authoritative.</em></p>
 </div>
 <p>
-<textarea id="input" placeholder="Paste your brief, motion, or letter text here..."></textarea>
+<textarea id="input" data-i18n-placeholder="inputPlaceholder" placeholder="Paste your brief, motion, or letter text here..."></textarea>
 </p>
 <p>
 <input type="file" accept=".txt" onchange="openFile(this)">
-<button onclick="check()">Check citations</button>
-<button onclick="exportMarkdown()">Copy Markdown checklist</button>
-<button onclick="exportJson()">Download JSON</button>
+<button onclick="check()" data-i18n="check">Check citations</button>
+<button onclick="exportMarkdown()" data-i18n="copyMarkdown">Copy Markdown checklist</button>
+<button onclick="exportJson()" data-i18n="downloadJson">Download JSON</button>
 </p>
+<h2 data-i18n="queryTransHeading">Search query translation</h2>
+<p><strong data-i18n="origQueryLabel">Original query</strong><br><span id="origQuery"></span></p>
+<p><strong data-i18n="enQueryLabel">English query (auto-translated — edit it and search again if the translation is wrong)</strong><br>
+<textarea id="enQuery" rows="3" style="height:80px"></textarea></p>
+<p><button onclick="searchEnQuery()" data-i18n="searchEnQuery">Search with this English query</button></p>
+<p id="queryStatus"></p>
 <p id="count"></p>
 <table>
-<thead><tr><th>#</th><th>Citation</th><th>Case name in text</th><th>Label</th><th>Manual-check links</th></tr></thead>
+<thead><tr><th data-i18n="thIndex">#</th><th data-i18n="thCitation">Citation</th><th data-i18n="thCaseName">Case name in text</th><th data-i18n="thLabel">Label</th><th data-i18n="thLinks">Manual-check links</th></tr></thead>
 <tbody id="results"></tbody>
 </table>
-<h2>How to run the full check</h2>
-<p>The full check needs the Python CLI and your own free CourtListener token (see the README). It sends only the extracted citation strings by default, never your brief text.</p>
+<h2 data-i18n="transHeading">Opinion translation viewer (v2, local prototype)</h2>
+<div class="warning">
+<strong data-i18n="transWarning">Machine-translation warning: this is a machine translation, not legal advice. The original text prevails. Always read the original before relying on any translated passage. Case names, citations, reporter abbreviations, and numbers are kept verbatim and are not translated.</strong>
+</div>
+<p data-i18n="transPreservedNote">Protected text (case names, citations, reporter abbreviations, numbers) is shown verbatim in both columns.</p>
+<p data-i18n="transPrivacyNote">If you enter an endpoint, the pasted opinion text is sent to that endpoint for translation. It is not sent anywhere when no endpoint is configured.</p>
+<p data-i18n="transSourceNote">v2 assumes the pasted opinion is in English.</p>
+<p>
+<textarea id="opinion" data-i18n-placeholder="transPastePlaceholder" placeholder="Paste opinion text here (blank lines separate paragraphs)..."></textarea>
+</p>
+<p>
+<label><span data-i18n="transEndpointLabel">Translation endpoint (LibreTranslate-compatible /translate URL; leave blank for no translation)</span><br>
+<input type="text" id="mtEndpoint" data-i18n-placeholder="transEndpointPlaceholder" placeholder="https://your-own-server.example/translate — no endpoint is configured by default"></label>
+</p>
+<p>
+<label><span data-i18n="transTargetLabel">Translate to</span>
+<select id="mtTarget">
+<option value="es">Español</option>
+<option value="zh">中文</option>
+</select></label>
+<button onclick="doTranslate()" data-i18n="transTranslate">Translate paragraphs</button>
+</p>
+<table>
+<thead><tr><th data-i18n="transOriginal">Original</th><th data-i18n="transTranslation">Translation</th></tr></thead>
+<tbody id="transResults"></tbody>
+</table>
+<h2 data-i18n="howTo">How to run the full check</h2>
+<p data-i18n="howToText">The full check needs the Python CLI and your own free CourtListener token (see the README). It sends only the extracted citation strings by default, never your brief text.</p>
 <pre>pip install .
 python -m legalcite check brief.md --md report.md
 # with: COURTLISTENER_TOKEN set in your environment</pre>
-<p>Privacy: text never leaves your browser on this page; the only third-party script is GoatCounter (page views only). Credits: CourtListener / Free Law Project, eyecite (BSD-2). License: MIT.</p>
+<p data-i18n="privacy">Privacy: text never leaves your browser on this page; the only third-party script is GoatCounter (page views only). Credits: CourtListener / Free Law Project, eyecite (BSD-2). License: MIT.</p>
 <script src="labels.js"></script>
 <script src="extract.js"></script>
+<script src="i18n.js"></script>
+<script src="translate.js"></script>
 <script src="app.js"></script>
 <!-- GoatCounter: privacy-friendly, cookie-free page-view counter (no personal data). -->
 <script data-goatcounter="https://szzxli.goatcounter.com/count"
