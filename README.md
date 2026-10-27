@@ -178,3 +178,44 @@ target = English). If no endpoint is configured, or translation fails,
 the page says so plainly, generates no English query, claims no English
 search, and runs citation extraction on the original query only -- a
 fake or guessed translation is never used as a search query.
+
+## Daily Legal Briefing ("每日法律简报") — local-only, first version
+
+**Status: local prototype only, not pushed or deployed.** A section on the
+web page, in the "查自己的导航" line: a morning briefing, open-and-see.
+
+What it does:
+
+- 1-minute onboarding: pick a state (first version ONLY California, Texas,
+  Florida, New York — California first), pick topics/issues, paste cases
+  you follow. Saving preferences immediately shows a briefing: real items
+  when the CourtListener fetch returns ranked matches, otherwise a
+  CLEARLY LABELLED SAMPLE briefing (fictional examples marked SAMPLE/示例,
+  never presented as real cases) so the page is never an empty state.
+- 30-second overview at the top: three counts only — followed-case
+  updates, upcoming deadlines, state new-rule items.
+- Items in appeal order, total cap 5 (about 5 minutes): (a) followed
+  cases — new progress found via CourtListener search; (b) state new
+  rules + deadline countdown; (c) court fines news in the user's state
+  courts on the user's topics. Every item carries a one-line "why this
+  matters to you" (state + topic + which followed case it relates to);
+  items with no statable reason are dropped, never shown bare. Every
+  item links to its original source.
+
+Limits (read before relying on any briefing item):
+
+- NO email push, NO account, NO server, NO CourtListener token.
+  Preferences live only in browser localStorage, with a clear-all button.
+- NO invented rules or deadlines. The rules/deadlines bucket comes ONLY
+  from entries the user typed (each with a date and a source link);
+  countdowns are computed from those dates alone. If nothing is
+  verified, that bucket honestly shows empty.
+- NO invented summaries: item text uses only title/court/date/snippet
+  fields from the source. The why-line is generated from the match and
+  is labelled as such. Not legal advice — read every original.
+- The live fetch runs only when the user clicks "Get today's briefing"
+  and sends only saved court/topic/citation query strings (never brief
+  text). If the fetch is blocked (sign-in, CORS, or rate limit), the
+  page says so plainly and falls back to manual mode (user-pasted
+  CourtListener links/text, ranked the same way). Nothing is fabricated
+  to fill the briefing.
