@@ -1,0 +1,221 @@
+{
+  "mode": "replay (mock)",
+  "version": "v0.1 \u2014 2026-10-26",
+  "generated_at": "2026-10-27T02:51:44.748944+00:00",
+  "entries": [
+    {
+      "id": "grobler-1",
+      "kind": "bad",
+      "label": "NOT_FOUND",
+      "api_status": 404,
+      "expected_labels": [
+        "NOT_FOUND",
+        "INVALID_REPORTER"
+      ],
+      "pass": true,
+      "citation": "670 S.W.2d 248",
+      "case_name": "Hunt v. Smith"
+    },
+    {
+      "id": "grobler-2",
+      "kind": "bad",
+      "label": "NOT_FOUND",
+      "api_status": 404,
+      "expected_labels": [
+        "NOT_FOUND",
+        "INVALID_REPORTER"
+      ],
+      "pass": true,
+      "citation": "616 S.W.3d 389",
+      "case_name": "Bargo v. Bargo"
+    },
+    {
+      "id": "grobler-3",
+      "kind": "bad",
+      "label": "NOT_FOUND",
+      "api_status": 404,
+      "expected_labels": [
+        "NOT_FOUND",
+        "INVALID_REPORTER"
+      ],
+      "pass": true,
+      "citation": "422 S.W.3d 727",
+      "case_name": "Roberts v. Hensley"
+    },
+    {
+      "id": "nantongo-1",
+      "kind": "bad",
+      "label": "MISMATCH",
+      "api_status": 200,
+      "expected_labels": [
+        "MISMATCH",
+        "NOT_FOUND"
+      ],
+      "pass": true,
+      "citation": "715 F. App'x 84",
+      "case_name": "Mpala v. Segarra"
+    },
+    {
+      "id": "nantongo-2",
+      "kind": "bad",
+      "label": "MISMATCH",
+      "api_status": 200,
+      "expected_labels": [
+        "MISMATCH",
+        "NOT_FOUND"
+      ],
+      "pass": true,
+      "citation": "357 F. App'x 180",
+      "case_name": "LinkCo, Inc. v. Naoyuki Akikusa"
+    },
+    {
+      "id": "real-obergefell-us",
+      "kind": "real",
+      "label": "VERIFIED",
+      "api_status": 200,
+      "expected_labels": [
+        "VERIFIED"
+      ],
+      "pass": true,
+      "citation": "576 U.S. 644",
+      "case_name": "Obergefell v. Hodges"
+    },
+    {
+      "id": "real-brown-us",
+      "kind": "real",
+      "label": "VERIFIED",
+      "api_status": 200,
+      "expected_labels": [
+        "VERIFIED"
+      ],
+      "pass": true,
+      "citation": "347 U.S. 483",
+      "case_name": "Brown v. Board of Education"
+    },
+    {
+      "id": "real-marbury-us",
+      "kind": "real",
+      "label": "VERIFIED",
+      "api_status": 200,
+      "expected_labels": [
+        "VERIFIED"
+      ],
+      "pass": true,
+      "citation": "5 U.S. 137",
+      "case_name": "Marbury v. Madison"
+    },
+    {
+      "id": "real-miranda-us",
+      "kind": "real",
+      "label": "VERIFIED",
+      "api_status": 200,
+      "expected_labels": [
+        "VERIFIED"
+      ],
+      "pass": true,
+      "citation": "384 U.S. 436",
+      "case_name": "Miranda v. Arizona"
+    },
+    {
+      "id": "real-roe-us",
+      "kind": "real",
+      "label": "VERIFIED",
+      "api_status": 200,
+      "expected_labels": [
+        "VERIFIED"
+      ],
+      "pass": true,
+      "citation": "410 U.S. 113",
+      "case_name": "Roe v. Wade"
+    },
+    {
+      "id": "real-obergefell-sct",
+      "kind": "real",
+      "label": "VERIFIED",
+      "api_status": 200,
+      "expected_labels": [
+        "VERIFIED"
+      ],
+      "pass": true,
+      "citation": "135 S. Ct. 2584",
+      "case_name": "Obergefell v. Hodges"
+    },
+    {
+      "id": "pending-f3d",
+      "kind": "real",
+      "label": "PENDING",
+      "api_status": null,
+      "expected_labels": [
+        "PENDING"
+      ],
+      "pass": null,
+      "note": "Placeholder: no citation yet, no fixture, excluded from scoring. Fill in only after a human confirms a real F.3d control in CourtListener."
+    },
+    {
+      "id": "pending-fsupp3d",
+      "kind": "real",
+      "label": "PENDING",
+      "api_status": null,
+      "expected_labels": [
+        "PENDING"
+      ],
+      "pass": null,
+      "note": "Placeholder: no citation yet, no fixture, excluded from scoring."
+    },
+    {
+      "id": "pending-fappx-real",
+      "kind": "real",
+      "label": "PENDING",
+      "api_status": null,
+      "expected_labels": [
+        "PENDING"
+      ],
+      "pass": null,
+      "note": "Placeholder: no citation yet, no fixture, excluded from scoring."
+    },
+    {
+      "id": "pending-sw3d-real",
+      "kind": "real",
+      "label": "PENDING",
+      "api_status": null,
+      "expected_labels": [
+        "PENDING"
+      ],
+      "pass": null,
+      "note": "Placeholder: no citation yet, no fixture, excluded from scoring."
+    },
+    {
+      "id": "pending-ne3d",
+      "kind": "real",
+      "label": "PENDING",
+      "api_status": null,
+      "expected_labels": [
+        "PENDING"
+      ],
+      "pass": null,
+      "note": "Placeholder: no citation yet, no fixture, excluded from scoring."
+    },
+    {
+      "id": "pending-p3d",
+      "kind": "real",
+      "label": "PENDING",
+      "api_status": null,
+      "expected_labels": [
+        "PENDING"
+      ],
+      "pass": null,
+      "note": "Placeholder: no citation yet, no fixture, excluded from scoring."
+    },
+    {
+      "id": "pending-calrptr3d",
+      "kind": "real",
+      "label": "PENDING",
+      "api_status": null,
+      "expected_labels": [
+        "PENDING"
+      ],
+      "pass": null,
+      "note": "Placeholder: no citation yet, no fixture, excluded from scoring."
+    }
+  ]
+}
