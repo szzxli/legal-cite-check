@@ -1,4 +1,5 @@
 # legal-cite-check — does the case you cited exist, and is it the case you named?
+Live web tool: https://szzxli.github.io/legal-cite-check/
 
 > **Not legal advice. This tool only checks whether a cited case exists in CourtListener and whether the case name matches. It does not check whether the case supports your argument, whether quotes or pin cites are accurate, or whether the case is still good law. A case marked NOT FOUND may still exist (CourtListener's coverage is incomplete); a case marked VERIFIED may still be wrong for your purpose. Read every case you cite.**
 
