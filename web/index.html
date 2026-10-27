@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>legal-cite-check — does the case you cited exist?</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2em auto; padding: 0 1em; }
+.disclaimer { border: 2px solid #900; padding: 1em; background: #fff5f5; }
+textarea { width: 100%; height: 200px; }
+table { border-collapse: collapse; width: 100%; }
+td, th { border: 1px solid #ccc; padding: 0.4em; text-align: left; }
+</style>
+</head>
+<body>
+<h1>legal-cite-check</h1>
+<p>Does the case you cited exist in CourtListener, and is it the case you named? Paste text below. This page only extracts citations in your browser — it does not look anything up.</p>
+<div class="disclaimer" id="disclaimer">
+<strong>Not legal advice. This tool only checks whether a cited case exists in CourtListener and whether the case name matches. It does not check whether the case supports your argument, whether quotes or pin cites are accurate, or whether the case is still good law. A case marked NOT FOUND may still exist (CourtListener's coverage is incomplete); a case marked VERIFIED may still be wrong for your purpose. Read every case you cite.</strong>
+</div>
+<p>
+<textarea id="input" placeholder="Paste your brief, motion, or letter text here..."></textarea>
+</p>
+<p>
+<input type="file" accept=".txt" onchange="openFile(this)">
+<button onclick="check()">Check citations</button>
+<button onclick="exportMarkdown()">Copy Markdown checklist</button>
+<button onclick="exportJson()">Download JSON</button>
+</p>
+<p id="count"></p>
+<table>
+<thead><tr><th>#</th><th>Citation</th><th>Case name in text</th><th>Label</th><th>Manual-check links</th></tr></thead>
+<tbody id="results"></tbody>
+</table>
+<h2>How to run the full check</h2>
+<p>The full check needs the Python CLI and your own free CourtListener token (see the README). It sends only the extracted citation strings by default, never your brief text.</p>
+<pre>pip install .
+python -m legalcite check brief.md --md report.md
+# with: COURTLISTENER_TOKEN set in your environment</pre>
+<p>Privacy: text never leaves your browser on this page; the only third-party script is GoatCounter (page views only). Credits: CourtListener / Free Law Project, eyecite (BSD-2). License: MIT.</p>
+<script src="labels.js"></script>
+<script src="extract.js"></script>
+<script src="app.js"></script>
+<!-- GoatCounter: privacy-friendly, cookie-free page-view counter (no personal data). -->
+<script data-goatcounter="https://szzxli.goatcounter.com/count"
+        async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
