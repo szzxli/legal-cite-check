@@ -58,7 +58,7 @@ function healthReportMarkdown(report, t) {
   // is forwarded onward, so this line must not be misread in translation.
   var lines = ["> **This is a format and completeness check, not a verification result. It is not legal advice.**"];
   lines.push("> For a full check, use the command-line tool: https://github.com/szzxli/legal-cite-check#full-check-with-courtlistener-cli");
-  lines.push("> **" + f("disclaimer", "Not legal advice."));;
+  lines.push("> **" + f("disclaimer", "Not legal advice.") + "**");
   lines.push("> " + f("scope", "This report does not check whether cases support your argument, whether quotes are accurate, or whether a case is still good law."));
   lines.push("");
   lines.push("## " + f("summary", "Summary"));
